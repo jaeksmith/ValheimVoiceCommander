@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Transactions;
 using InputInterceptorNS;
 using ValheimVoicecommander.Interfaces;
 
@@ -75,11 +76,88 @@ namespace ValheimVoicecommander.Implementations
 
             if (commandToken == "OpenFullMap")
             {
-                SendKeyToTargetWindow('M');
+                SendKeysToTargetWindow(true, KeyCode.M);
+            }
+            else if (commandToken == "ActivateForsaken")
+            {
+                SendKeysToTargetWindow(true, KeyCode.F);
+            }
+            else if (commandToken == "EmotePoint")
+            {
+                SendKeysToTargetWindow(true, "\n/point\n");
+            }
+            else if (commandToken == "EmoteThumbsUp")
+            {
+                SendKeysToTargetWindow(true, "\n/thumbsup\n");
+            }
+            else if (commandToken == "EmoteDance")
+            {
+                SendKeysToTargetWindow(true, "\n/dance\n");
+            }
+            else if (commandToken == "ShowMessages")
+            {
+                SendKeysToTargetWindow(true, KeyCode.Enter);
+                Thread.Sleep(500);
+                SendKeyPress(KeyCode.Enter);
             }
         }
 
-        private void SendKeyToTargetWindow(char key)
+        private void SendKeysToTargetWindow(bool activateTargetWindowFirst, string keySequence)
+        {
+            Console.WriteLine("Trans: " + keySequence);
+            var keyCodes = TranslateToKeyCodes(keySequence);
+            Console.WriteLine("Sending: " + string.Join(",", keyCodes));
+            SendKeysToTargetWindow(activateTargetWindowFirst, keyCodes);
+            Console.WriteLine("done");
+        }
+
+        private KeyCode[] TranslateToKeyCodes(string keySequence)
+        {
+            var keyCodes = new List<KeyCode>();
+
+            foreach (char c in keySequence)
+            {
+                switch (c)
+                {
+                    case '\n':
+                        keyCodes.Add(KeyCode.Enter);
+                        break;
+                    case '/':
+                        keyCodes.Add(KeyCode.Slash);
+                        break;
+                    case ' ':
+                        keyCodes.Add(KeyCode.Space);
+                        break;
+                    default:
+                        if (Enum.TryParse(c.ToString(), true, out KeyCode keyCode))
+                        {
+                            keyCodes.Add(keyCode);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Warning: Unrecognized character '{c}' in key sequence.");
+                        }
+                        break;
+                }
+            }
+
+            return keyCodes.ToArray();
+        }
+
+        private void SendKeysToTargetWindow(bool activateTargetWindowFirst, params KeyCode[] keyCodes)
+        {
+            if (activateTargetWindowFirst)
+            {
+                FindActiveTargetWindow();
+            }
+
+            foreach (var keyCode in keyCodes)
+            {
+                SendKeyPress(keyCode);
+            }
+        }
+
+        private void FindActiveTargetWindow()
         {
             // IntPtr hWnd = Test.BetterFindAndBringWindowToFront();
             // if (hWnd == IntPtr.Zero)
@@ -158,22 +236,20 @@ namespace ValheimVoicecommander.Implementations
                     return;
                 }
             }
+        }
 
-            // Allow some time after the right-click
-//            Thread.Sleep(200);
-
-            // Create a KeyboardHook instance
+        private void SendKeyPress(KeyCode keyCode)
+        {
             using (var keyboardHook = new KeyboardHook())
             {
                 // Simulate pressing the 'M' key
-                if (!keyboardHook.SimulateKeyPress(KeyCode.M))
+                if (!keyboardHook.SimulateKeyPress(keyCode))
                 {
-                    Console.WriteLine("Failed to simulate '" + key + "' key press.");
+                    Console.WriteLine("Failed to simulate '" + keyCode + "' key press.");
                     return;
                 }
             }
         }
-
         // // Focus the window and ensure it is the active foreground window
         // private static bool FocusAndWaitForWindow(IntPtr hWnd, int maxRetries = 10, int delayMs = 100)
         // {

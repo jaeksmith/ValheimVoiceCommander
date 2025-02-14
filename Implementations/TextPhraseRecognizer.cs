@@ -67,7 +67,16 @@ namespace ValheimVoicecommander.Implementations
             var phrases = new Dictionary<string[], string>
             {
                 { new[] { "steve", "show", "map" }, "OpenFullMap" },
+
                 { new[] { "steve", "activate", "forsaken" }, "ActivateForsaken" },
+                { new[] { "steve", "activate", "magic" }, "ActivateForsaken" },
+                { new[] { "steve", "do", "magic" }, "ActivateForsaken" },
+
+                { new[] { "steve", "show", "messages" }, "ShowMessages" },
+
+                { new[] { "steve", "point" }, "EmotePoint" },
+                { new[] { "steve", "thumbs", "up" }, "EmoteThumbsUp" },
+                { new[] { "steve", "dance" }, "EmoteDance" },
             };
 
             // Convert the phrases to the node structure
